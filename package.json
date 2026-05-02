@@ -9,7 +9,8 @@
   },
   "scripts": {
     "test": "vitest run",
-    "build": "tsc && tsc-alias && chmod +x dist/index.js"
+    "build": "tsc && tsc-alias && chmod +x dist/index.js",
+    "start:api": "NODE_OPTIONS='--loader ts-node/esm --no-warnings' ts-node src/server.ts"
   },
   "keywords": [],
   "author": "",
@@ -28,6 +29,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.6.2",
+    "ts-node": "^10.9.2",
     "tsc-alias": "^1.8.17",
     "typescript": "^6.0.3",
     "vitest": "^4.1.5"
