@@ -9,6 +9,10 @@ export function getDateRange(period: string): { start: dayjs.Dayjs; end: dayjs.D
     start = dayjs().startOf('day');
     end = dayjs().endOf('day');
     label = "Aujourd'hui";
+  } else if (period === 'yesterday') {
+    start = dayjs().startOf('day').subtract(1, 'day');
+    end = dayjs().endOf('day').subtract(1, 'day');
+    label = "Hier";
   } else if (period === 'week') {
     start = dayjs().startOf('week');
     end = dayjs().endOf('week');

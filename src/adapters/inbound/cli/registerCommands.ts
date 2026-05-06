@@ -46,7 +46,7 @@ export function registerCommands(program: Command, deps: Dependencies) {
   program
     .command('report')
     .description('Affiche un rapport des heures travaillées')
-    .option('-p, --period <period>', "Période (today, week, month, last-month)", 'month')
+    .option('-p, --period <period>', "Période (today, yesterday, week, month, last-month)", 'month')
     .option('-d, --detail', 'Affiche le détail par jour')
     .action(async (options) => {
       prompts.intro('📊 Work - Rapport');
