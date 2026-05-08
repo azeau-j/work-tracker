@@ -2,11 +2,13 @@ import * as prompts from "@clack/prompts";
 import { Command } from "commander";
 import { startCommand, stopCommand, logCommand } from './track.js';
 import { reportCommand } from './report.js';
+import { migrateCommand } from './migrate.js';
 import { StartTimer } from '@app/domain/usecases/StartTimer.js';
 import { StopTimer } from '@app/domain/usecases/StopTimer.js';
 import { LogTime } from '@app/domain/usecases/LogTime.js';
 import { GetReport } from '@app/domain/usecases/GetReport.js';
 import { ListProjects } from '@app/domain/usecases/ListProjects.js';
+import { MigrateData } from '@app/domain/usecases/MigrateData.js';
 import path from "node:path";
 
 export interface Dependencies {
@@ -15,7 +17,9 @@ export interface Dependencies {
   logTime: LogTime;
   getReport: GetReport;
   listProjects: ListProjects;
+  migrateData: MigrateData;
   storageDir: string;
+  storageType: string;
 }
 
 export function registerCommands(program: Command, deps: Dependencies) {
@@ -54,9 +58,23 @@ export function registerCommands(program: Command, deps: Dependencies) {
     });
 
   program
+    .command('migrate')
+    .description('Migre les données entre FileSystem et SQLite')
+    .action(async () => {
+      prompts.intro('🚚 Work - Migration');
+      await migrateCommand(deps.migrateData, deps.storageDir);
+    });
+
+  program
     .command('edit')
     .description("Ouvre le fichier de logs dans l'éditeur par défaut ($EDITOR)")
     .action(async () => {
+      if (deps.storageType === 'sqlite') {
+        prompts.log.error("La commande 'edit' n'est pas disponible en mode SQLite.");
+        prompts.log.info("Veuillez utiliser un outil de gestion de base de données SQLite ou repasser en mode 'fs' via la commande 'migrate'.");
+        return;
+      }
+
       const { spawn } = await import('node:child_process');
       const editor = process.env.EDITOR || 'nano';
       const logsPath = path.join(deps.storageDir, 'logs.txt');
