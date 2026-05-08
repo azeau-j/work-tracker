@@ -2,11 +2,13 @@ import * as prompts from "@clack/prompts";
 import { Command } from "commander";
 import { startCommand, stopCommand, logCommand } from './track.js';
 import { reportCommand } from './report.js';
+import { migrateCommand } from './migrate.js';
 import { StartTimer } from '@app/domain/usecases/StartTimer.js';
 import { StopTimer } from '@app/domain/usecases/StopTimer.js';
 import { LogTime } from '@app/domain/usecases/LogTime.js';
 import { GetReport } from '@app/domain/usecases/GetReport.js';
 import { ListProjects } from '@app/domain/usecases/ListProjects.js';
+import { MigrateData, MigrationSource } from '@app/domain/usecases/MigrateData.js';
 import path from "node:path";
 
 export interface Dependencies {
@@ -15,6 +17,9 @@ export interface Dependencies {
   logTime: LogTime;
   getReport: GetReport;
   listProjects: ListProjects;
+  migrateData: MigrateData;
+  fsSource: MigrationSource;
+  sqliteSource: MigrationSource;
   storageDir: string;
 }
 
@@ -51,6 +56,14 @@ export function registerCommands(program: Command, deps: Dependencies) {
     .action(async (options) => {
       prompts.intro('📊 Work - Rapport');
       await reportCommand(deps.getReport, options);
+    });
+
+  program
+    .command('migrate')
+    .description('Migre les données entre FileSystem et SQLite')
+    .action(async () => {
+      prompts.intro('🚚 Work - Migration');
+      await migrateCommand(deps.migrateData, deps.storageDir, deps.fsSource, deps.sqliteSource);
     });
 
   program
