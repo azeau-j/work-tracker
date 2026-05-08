@@ -8,6 +8,7 @@ import { SqliteProjectRepository } from './adapters/outbound/sqlite/SqliteProjec
 import { SqliteTimeEntryRepository } from './adapters/outbound/sqlite/SqliteTimeEntryRepository.js';
 import { StartTimer } from './domain/usecases/StartTimer.js';
 import { StopTimer } from './domain/usecases/StopTimer.js';
+import { GetActiveTimer } from './domain/usecases/GetActiveTimer.js';
 import { LogTime } from './domain/usecases/LogTime.js';
 import { GetReport } from './domain/usecases/GetReport.js';
 import { ListProjects } from './domain/usecases/ListProjects.js';
@@ -81,6 +82,7 @@ try {
 const deps = {
   startTimer: new StartTimer(timeRepo, projectRepo),
   stopTimer: new StopTimer(timeRepo),
+  getActiveTimer: new GetActiveTimer(timeRepo),
   logTime: new LogTime(timeRepo, projectRepo),
   getReport: new GetReport(timeRepo),
   listProjects: new ListProjects(projectRepo),

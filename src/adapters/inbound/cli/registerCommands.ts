@@ -1,10 +1,12 @@
 import * as prompts from "@clack/prompts";
 import { Command } from "commander";
-import { startCommand, stopCommand, logCommand } from './track.js';
+import dayjs from 'dayjs';
+import { startCommand, stopCommand, logCommand, toggleCommand } from './track.js';
 import { reportCommand } from './report.js';
 import { migrateCommand } from './migrate.js';
 import { StartTimer } from '@app/domain/usecases/StartTimer.js';
 import { StopTimer } from '@app/domain/usecases/StopTimer.js';
+import { GetActiveTimer } from '@app/domain/usecases/GetActiveTimer.js';
 import { LogTime } from '@app/domain/usecases/LogTime.js';
 import { GetReport } from '@app/domain/usecases/GetReport.js';
 import { ListProjects } from '@app/domain/usecases/ListProjects.js';
@@ -14,6 +16,7 @@ import path from "node:path";
 export interface Dependencies {
   startTimer: StartTimer;
   stopTimer: StopTimer;
+  getActiveTimer: GetActiveTimer;
   logTime: LogTime;
   getReport: GetReport;
   listProjects: ListProjects;
@@ -23,6 +26,21 @@ export interface Dependencies {
 }
 
 export function registerCommands(program: Command, deps: Dependencies) {
+  program
+    .command('status')
+    .description('Affiche le statut du chronomètre en cours')
+    .action(async () => {
+      const activeTimer = await deps.getActiveTimer.execute();
+      if (activeTimer) {
+        const durationMin = dayjs().diff(dayjs(activeTimer.start), 'minute');
+        const hours = Math.floor(durationMin / 60);
+        const minutes = durationMin % 60;
+        process.stdout.write(`▶ [${activeTimer.project}] (${hours}h${minutes}m)\n`);
+      } else {
+        process.stdout.write('⏹ Inactif\n');
+      }
+    });
+
   program
     .command('start [project]')
     .description('Démarre un chronomètre pour un projet')
@@ -88,5 +106,12 @@ export function registerCommands(program: Command, deps: Dependencies) {
       child.on('exit', () => {
         prompts.outro('Édition terminée.');
       });
+    });
+
+  program
+    .command('toggle')
+    .description('Bascule l\'état du chronomètre (démarre/arrête) via un raccourci global')
+    .action(async () => {
+      await toggleCommand(deps.getActiveTimer, deps.startTimer, deps.stopTimer, deps.listProjects);
     });
 }

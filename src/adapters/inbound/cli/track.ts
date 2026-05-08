@@ -1,9 +1,11 @@
 import * as prompts from '@clack/prompts';
 import dayjs from 'dayjs';
+import { execSync } from 'node:child_process';
 import { StartTimer } from '@app/domain/usecases/StartTimer.js';
 import { StopTimer } from '@app/domain/usecases/StopTimer.js';
 import { LogTime } from '@app/domain/usecases/LogTime.js';
 import { ListProjects } from '@app/domain/usecases/ListProjects.js';
+import { GetActiveTimer } from '@app/domain/usecases/GetActiveTimer.js';
 
 async function promptNewProject(): Promise<string> {
   const newProject = await prompts.text({
@@ -137,6 +139,70 @@ export async function logCommand(useCase: LogTime, listProjects: ListProjects) {
     prompts.outro(`✔ Temps enregistré pour "${finalProject}".`);
   } catch (error: any) {
     prompts.log.error(error.message);
+    process.exit(1);
+  }
+}
+
+export async function toggleCommand(
+  getActiveTimer: GetActiveTimer,
+  startTimer: StartTimer,
+  stopTimer: StopTimer,
+  listProjects: ListProjects
+) {
+  try {
+    const activeTimer = await getActiveTimer.execute();
+
+    if (activeTimer) {
+      const result = await stopTimer.execute({});
+      const durationMin = dayjs(result.end).diff(dayjs(result.start), 'minute');
+      const hours = Math.floor(durationMin / 60);
+      const minutes = durationMin % 60;
+      console.log(`⏹ Arrêté: ${result.project} (${hours}h ${minutes}m)`);
+    } else {
+      const projects = await listProjects.execute();
+      const projectList = projects.map(p => `"${p}"`).join(', ');
+      
+      // AppleScript pour choisir dans une liste ou saisir un nouveau
+      const script = `
+        set projectList to {${projectList}}
+        set newListOption to "✨ Nouveau projet..."
+        copy newListOption to end of projectList
+        
+        tell application "System Events"
+          activate
+          set chosenProject to choose from list projectList with title "Démarrer un chrono" with prompt "Choisissez un projet :" default items {newListOption}
+        end tell
+        
+        if chosenProject is false then
+          error "User cancelled"
+        else if item 1 of chosenProject is newListOption then
+          tell application "System Events"
+            set newProject to text returned of (display dialog "Nom du nouveau projet :" default answer "" with title "Nouveau projet")
+          end tell
+          return newProject
+        else
+          return item 1 of chosenProject
+        end if
+      `;
+      
+      let finalProject = '';
+      try {
+        finalProject = execSync(`osascript -e '${script.replace(/'/g, "'\\''")}'`, { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+      } catch (e) {
+        console.log("Opération annulée.");
+        process.exit(0);
+      }
+
+      if (!finalProject) {
+        console.error("Le nom du projet ne peut pas être vide.");
+        process.exit(1);
+      }
+
+      await startTimer.execute(finalProject);
+      console.log(`▶ Démarré: ${finalProject}`);
+    }
+  } catch (error: any) {
+    console.error(error.message);
     process.exit(1);
   }
 }

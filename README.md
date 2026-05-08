@@ -101,6 +101,48 @@ Puisque le format est du texte brut, vous pouvez également corriger une erreur 
 
 ---
 
+## 🍏 Intégration macOS (Barre de menus & Raccourcis)
+
+Vous pouvez intégrer `work` directement dans macOS pour une productivité maximale.
+
+### 1. Barre de menus (via SwiftBar)
+Affichez votre chrono actif en permanence en haut de votre écran.
+
+1.  Installez [SwiftBar](https://github.com/swiftbar/SwiftBar) (`brew install --cask swiftbar`).
+2.  Créez un fichier nommé `work.1m.sh` dans votre dossier de plugins SwiftBar :
+    ```bash
+    #!/bin/bash
+    # <bitbar.title>Work Tracker Status</bitbar.title>
+    
+    # Pour que SwiftBar trouve 'node' (surtout avec nvm/asdf/brew), 
+    # nous ajoutons les chemins habituels au PATH.
+    export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$HOME/.nvm/versions/node/$(ls $HOME/.nvm/versions/node/ | tail -1)/bin:$PATH"
+    # Note : Si vous utilisez nvm dans un autre dossier, adaptez le chemin ci-dessus.
+
+    # Exécute la commande status
+    work status
+    ```
+3.  Rendez le fichier exécutable : `chmod +x work.1m.sh`.
+
+*Astuce : Si l'erreur 'env:node: No such file' persiste, utilisez 'which node' et 'which work' dans votre terminal pour obtenir les chemins absolus et utilisez-les directement :*
+```bash
+/Users/VOTRE_NOM/.config/nvm/versions/node/v24.12.0/bin/node /Users/VOTRE_NOM/.config/nvm/versions/node/v24.12.0/bin/work status
+```
+
+### 2. Raccourci Clavier Global (via l'app Raccourcis)
+Basculez l'état de votre chronomètre (Démarrer/Arrêter) avec une simple combinaison de touches.
+
+1.  Ouvrez l'application **Raccourcis** (Shortcuts) de macOS.
+2.  Créez un nouveau raccourci nommé "Work Toggle".
+3.  Ajoutez l'action **"Exécuter un script shell"**.
+4.  Contenu du script : `/usr/local/bin/work toggle`.
+5.  Dans les réglages du raccourci (onglet Détails/Icône "i"), cliquez sur **"Ajouter un raccourci clavier"**.
+6.  Choisissez votre combinaison (ex: `Cmd + Option + W`).
+
+*Note : Si aucun chrono n'est lancé, une fenêtre surgissante macOS vous demandera de choisir ou de saisir un projet.*
+
+---
+
 ## 📝 Format du journal (`logs.txt`)
 Le format est conçu pour être simple à lire :
 ```text
