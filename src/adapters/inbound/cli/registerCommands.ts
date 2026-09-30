@@ -70,6 +70,7 @@ export function registerCommands(program: Command, deps: Dependencies) {
     .description('Affiche un rapport des heures travaillées')
     .option('-p, --period <period>', "Période (today, yesterday, week, month, last-month)", 'month')
     .option('-d, --detail', 'Affiche le détail par jour')
+    .option('-t, --target-day-hours <hours>', "Extrapole les heures de chaque jour pour atteindre un total de <hours> heures (ex: 8)")
     .action(async (options) => {
       prompts.intro('📊 Work - Rapport');
       await reportCommand(deps.getReport, options);
