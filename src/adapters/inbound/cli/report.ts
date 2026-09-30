@@ -1,10 +1,12 @@
 import * as prompts from '@clack/prompts';
 import { GetReport, DailyReport } from '@app/domain/usecases/GetReport.js';
 import { getDateRange } from '@app/utils/period.js';
+import { formatDuration } from './formatDuration.js';
 
 interface ReportOptions {
   period: string;
   detail?: boolean;
+  decimal?: boolean;
   targetDayHours?: string;
 }
 
@@ -14,26 +16,24 @@ function renderProgressBar(minutes: number, totalMinutes: number): string {
   return '█'.repeat(barLength).padEnd(10, '░');
 }
 
-function displayDetailedReport(dailyReports: DailyReport[]) {
+function displayDetailedReport(dailyReports: DailyReport[], isDecimal: boolean) {
   for (const day of dailyReports) {
     prompts.log.info(`📅 ${day.date}`);
     for (const { project, minutes } of day.projects) {
-      const hours = Math.floor(minutes / 60);
-      const mins = minutes % 60;
-      prompts.log.step(`  ${project.padEnd(20)} : ${hours}h ${mins}m`);
+      const formatted = formatDuration(minutes, isDecimal);
+      prompts.log.step(`  ${project.padEnd(20)} : ${formatted}`);
     }
   }
 }
 
-function displaySummaryReport(projectDurations: Map<string, number>, totalMinutes: number) {
+function displaySummaryReport(projectDurations: Map<string, number>, totalMinutes: number, isDecimal: boolean) {
   const sortedProjects = Array.from(projectDurations.entries()).sort((a, b) => b[1] - a[1]);
 
   for (const [project, minutes] of sortedProjects) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
+    const formatted = formatDuration(minutes, isDecimal);
     const bar = renderProgressBar(minutes, totalMinutes);
 
-    prompts.log.step(`${project.padEnd(20)} : ${bar} ${hours}h ${mins}m`);
+    prompts.log.step(`${project.padEnd(20)} : ${bar} ${formatted}`);
   }
 }
 
@@ -78,14 +78,13 @@ export async function reportCommand(usecase: GetReport, options: ReportOptions) 
     prompts.log.info(`ℹ Extrapolation appliquée sur une base de ${targetDayHours}h / jour travaillé`);
   }
 
+  const isDecimal = Boolean(options.decimal);
+
   if (options.detail) {
-    displayDetailedReport(result.dailyReports);
+    displayDetailedReport(result.dailyReports, isDecimal);
   } else {
-    displaySummaryReport(result.projectDurations, result.totalMinutes);
+    displaySummaryReport(result.projectDurations, result.totalMinutes, isDecimal);
   }
 
-  const totalHours = Math.floor(result.totalMinutes / 60);
-  const totalMins = result.totalMinutes % 60;
-
-  prompts.outro(`Total temps travaillé : ${totalHours}h ${totalMins}m`);
+  prompts.outro(`Total temps travaillé : ${formatDuration(result.totalMinutes, isDecimal)}`);
 }
