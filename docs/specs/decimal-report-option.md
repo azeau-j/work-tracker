@@ -33,6 +33,8 @@ Provide a `--decimal` CLI option for the report command that formats all display
 - **Presentation Component Updates**:
   - Both summary and detailed report presenters will consume the duration formatting utility rather than embedding inline hour/minute mathematical calculations.
   - The report completion message (outro) will use the same duration formatting utility to guarantee consistent styling across all sections of the report.
+- **Extrapolation Quantization in Decimal Mode**:
+  - When `--target-day-hours` is used in conjunction with `--decimal`, the use case quantizes extrapolated project durations by 6-minute increments (0.1h). This prevents independent decimal roundings from producing sum mismatches (e.g., 4.4h + 3.7h = 8.1h instead of 8.0h). Remainder compensation ensures the daily total matches the target day hours exactly.
 
 ## Testing Decisions
 

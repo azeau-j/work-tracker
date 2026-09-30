@@ -17,6 +17,7 @@ export interface GetReportRequest {
   startDate: Date;
   endDate: Date;
   targetDayHours?: number;
+  decimal?: boolean;
 }
 
 export interface GetReportResponse {
@@ -32,7 +33,7 @@ export class GetReport {
   async execute(request: GetReportRequest): Promise<GetReportResponse> {
     const entries = await this.timeEntryRepo.getEntries();
     const filteredEntries = this.filterEntriesByDateRange(entries, request.startDate, request.endDate);
-    const dailyReports = this.buildDailyReports(filteredEntries, request.targetDayHours);
+    const dailyReports = this.buildDailyReports(filteredEntries, request.targetDayHours, request.decimal);
     const { projectDurations, totalMinutes } = this.calculateSummaryTotals(dailyReports);
 
     return {
@@ -52,7 +53,7 @@ export class GetReport {
     });
   }
 
-  private buildDailyReports(entries: TimeEntry[], targetDayHours?: number): DailyReport[] {
+  private buildDailyReports(entries: TimeEntry[], targetDayHours?: number, decimal?: boolean): DailyReport[] {
     const rawAggregationByDay = new Map<string, Map<string, number>>();
 
     for (const entry of entries) {
@@ -81,7 +82,7 @@ export class GetReport {
       const rawDayTotal = projectList.reduce((sum, item) => sum + item.minutes, 0);
 
       if (targetDayHours !== undefined && targetDayHours > 0 && rawDayTotal > 0) {
-        projectList = this.extrapolateDayProjects(projectList, rawDayTotal, targetDayHours);
+        projectList = this.extrapolateDayProjects(projectList, rawDayTotal, targetDayHours, decimal);
       }
 
       projectList.sort((a, b) => b.minutes - a.minutes);
@@ -100,8 +101,10 @@ export class GetReport {
   private extrapolateDayProjects(
     projects: DailyProjectDuration[],
     rawDayTotal: number,
-    targetDayHours: number
+    targetDayHours: number,
+    decimal?: boolean
   ): DailyProjectDuration[] {
+    const quantum = decimal ? 6 : 1;
     const targetMinutes = Math.round(targetDayHours * 60);
     const factor = targetMinutes / rawDayTotal;
 
@@ -109,7 +112,7 @@ export class GetReport {
     const extrapolatedProjects: DailyProjectDuration[] = [];
 
     for (const item of projects) {
-      const extrapolated = Math.round(item.minutes * factor);
+      const extrapolated = Math.round((item.minutes * factor) / quantum) * quantum;
       extrapolatedProjects.push({
         project: item.project,
         minutes: extrapolated,

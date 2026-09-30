@@ -121,4 +121,34 @@ describe('GetReport', () => {
     expect(result.dailyReports[0].totalMinutes).toBe(480);
     expect(result.totalMinutes).toBe(480);
   });
+
+  it('quantizes extrapolated project minutes to multiples of 6 (0.1h) when decimal option is true', async () => {
+    const startRange = new Date('2026-09-07T00:00:00Z');
+    const endRange = new Date('2026-09-07T23:59:59Z');
+
+    // 196m and 164m = 360m total (6h). Target = 8h (480m).
+    // Without quantization, they become 261m (4.35h -> 4.4h) and 219m (3.65h -> 3.7h), summing to 8.1h.
+    // With 6-minute quantization, they become 264m (4.4h) and 216m (3.6h), summing to 480m (8.0h).
+    const entries = [
+      { project: 'Project A', start: new Date('2026-09-07T09:00:00Z'), end: new Date('2026-09-07T12:16:00Z') }, // 196m
+      { project: 'Project B', start: new Date('2026-09-07T13:00:00Z'), end: new Date('2026-09-07T15:44:00Z') }, // 164m
+    ];
+
+    vi.mocked(timeEntryRepo.getEntries).mockResolvedValue(entries);
+
+    const result = await useCase.execute({
+      startDate: startRange,
+      endDate: endRange,
+      targetDayHours: 8,
+      decimal: true,
+    });
+
+    const dayProjects = result.dailyReports[0].projects;
+    expect(dayProjects).toEqual([
+      { project: 'Project A', minutes: 264 },
+      { project: 'Project B', minutes: 216 },
+    ]);
+    expect(result.dailyReports[0].totalMinutes).toBe(480);
+    expect(result.totalMinutes).toBe(480);
+  });
 });

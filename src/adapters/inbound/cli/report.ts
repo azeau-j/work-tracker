@@ -61,11 +61,13 @@ export async function reportCommand(usecase: GetReport, options: ReportOptions) 
   const { start, end, label } = dateRange;
 
   const targetDayHours = getTargetDayHours(options.targetDayHours);
+  const isDecimal = Boolean(options.decimal);
 
   const result = await usecase.execute({
     startDate: start.toDate(),
     endDate: end.toDate(),
     targetDayHours,
+    decimal: isDecimal,
   });
 
   if (result.totalMinutes === 0) {
@@ -77,8 +79,6 @@ export async function reportCommand(usecase: GetReport, options: ReportOptions) 
   if (targetDayHours !== undefined) {
     prompts.log.info(`ℹ Extrapolation appliquée sur une base de ${targetDayHours}h / jour travaillé`);
   }
-
-  const isDecimal = Boolean(options.decimal);
 
   if (options.detail) {
     displayDetailedReport(result.dailyReports, isDecimal);

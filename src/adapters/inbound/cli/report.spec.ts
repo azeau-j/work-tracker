@@ -94,6 +94,7 @@ describe('reportCommand', () => {
     expect(mockGetReport.execute).toHaveBeenCalledWith(
       expect.objectContaining({
         targetDayHours: 8,
+        decimal: true,
       })
     );
     expect(prompts.log.info).toHaveBeenCalledWith(
