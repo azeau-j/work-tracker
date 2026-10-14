@@ -84,9 +84,26 @@ Visualisez le temps accumulé par projet pour préparer vos déclarations.
   work report --period week
   ```
 
+- **Semaine dernière** :
+  ```bash
+  work report --period last-week
+  ```
+
 - **Mois dernier** :
   ```bash
   work report --period last-month
+  ```
+
+- **Cumul de plusieurs périodes (`-c, --count`)** :
+  ```bash
+  # Les 2 dernières semaines (cette semaine + la précédente)
+  work report --period week -c 2
+
+  # Les 2 semaines précédant la semaine en cours
+  work report --period last-week -c 2
+
+  # Les 3 derniers mois
+  work report --period month --count 3
   ```
 
 ### 5. Édition manuelle (`edit`)

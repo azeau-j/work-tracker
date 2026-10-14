@@ -102,4 +102,52 @@ describe('reportCommand', () => {
     );
     expect(prompts.outro).toHaveBeenCalledWith('Total temps travaillé : 2.3h');
   });
+
+  it('supports last-week period and custom count', async () => {
+    await reportCommand(mockGetReport, {
+      period: 'last-week',
+      count: '2',
+    });
+
+    expect(mockGetReport.execute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        startDate: expect.any(Date),
+        endDate: expect.any(Date),
+      })
+    );
+    expect(prompts.log.info).toHaveBeenCalledWith(
+      'Rapport pour : Les 2 semaines précédentes'
+    );
+  });
+
+  it('exits with error when count is invalid', async () => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+
+    await reportCommand(mockGetReport, {
+      period: 'week',
+      count: '0',
+    });
+
+    expect(prompts.log.error).toHaveBeenCalledWith(
+      'La valeur de --count doit être un entier supérieur ou égal à 1.'
+    );
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(mockGetReport.execute).not.toHaveBeenCalled();
+    exitSpy.mockRestore();
+  });
+
+  it('exits with error when period is invalid', async () => {
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => {}) as any);
+
+    await reportCommand(mockGetReport, {
+      period: 'invalid-period',
+    });
+
+    expect(prompts.log.error).toHaveBeenCalledWith(
+      'Période invalid-period invalide.'
+    );
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(mockGetReport.execute).not.toHaveBeenCalled();
+    exitSpy.mockRestore();
+  });
 });

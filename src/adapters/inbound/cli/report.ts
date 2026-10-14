@@ -5,6 +5,7 @@ import { formatDuration } from './formatDuration.js';
 
 interface ReportOptions {
   period: string;
+  count?: string;
   detail?: boolean;
   decimal?: boolean;
   targetDayHours?: string;
@@ -50,13 +51,33 @@ function getTargetDayHours(targetDayHours?: string): number | undefined {
   return parsed;
 }
 
+function getPeriodCount(count?: string): number | undefined {
+  if (count === undefined) {
+    return 1;
+  }
+
+  const parsed = Number(count);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    prompts.log.error("La valeur de --count doit être un entier supérieur ou égal à 1.");
+    process.exit(1);
+    return undefined;
+  }
+  return parsed;
+}
+
 export async function reportCommand(usecase: GetReport, options: ReportOptions) {
+  const periodCount = getPeriodCount(options.count);
+  if (periodCount === undefined) {
+    return;
+  }
+
   let dateRange;
   try {
-    dateRange = getDateRange(options.period);
+    dateRange = getDateRange(options.period, periodCount);
   } catch (error: any) {
     prompts.log.error(error.message);
     process.exit(1);
+    return;
   }
   const { start, end, label } = dateRange;
 

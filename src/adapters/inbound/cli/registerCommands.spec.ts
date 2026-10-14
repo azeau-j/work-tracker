@@ -15,7 +15,7 @@ vi.mock('@clack/prompts', () => ({
   },
 }));
 
-describe('registerCommands - report --decimal', () => {
+describe('registerCommands - report options', () => {
   it('parses --decimal option and passes it to reportCommand', async () => {
     const reportSpy = vi.spyOn(reportModule, 'reportCommand').mockResolvedValue(undefined);
 
@@ -41,6 +41,64 @@ describe('registerCommands - report --decimal', () => {
       expect.objectContaining({
         decimal: true,
         period: 'month',
+        count: '1',
+      })
+    );
+  });
+
+  it('parses -p last-week and -c 2 options and passes them to reportCommand', async () => {
+    const reportSpy = vi.spyOn(reportModule, 'reportCommand').mockResolvedValue(undefined);
+
+    const program = new Command();
+    const mockDeps = {
+      startTimer: {} as any,
+      stopTimer: {} as any,
+      getActiveTimer: {} as any,
+      logTime: {} as any,
+      getReport: {} as any,
+      listProjects: {} as any,
+      migrateData: {} as any,
+      storageDir: '/tmp',
+      storageType: 'fs',
+    } as Dependencies;
+
+    registerCommands(program, mockDeps);
+
+    await program.parseAsync(['node', 'test', 'report', '-p', 'last-week', '-c', '2']);
+
+    expect(reportSpy).toHaveBeenCalledWith(
+      mockDeps.getReport,
+      expect.objectContaining({
+        period: 'last-week',
+        count: '2',
+      })
+    );
+  });
+
+  it('parses --count option with long flag', async () => {
+    const reportSpy = vi.spyOn(reportModule, 'reportCommand').mockResolvedValue(undefined);
+
+    const program = new Command();
+    const mockDeps = {
+      startTimer: {} as any,
+      stopTimer: {} as any,
+      getActiveTimer: {} as any,
+      logTime: {} as any,
+      getReport: {} as any,
+      listProjects: {} as any,
+      migrateData: {} as any,
+      storageDir: '/tmp',
+      storageType: 'fs',
+    } as Dependencies;
+
+    registerCommands(program, mockDeps);
+
+    await program.parseAsync(['node', 'test', 'report', '--count', '3']);
+
+    expect(reportSpy).toHaveBeenCalledWith(
+      mockDeps.getReport,
+      expect.objectContaining({
+        count: '3',
       })
     );
   });

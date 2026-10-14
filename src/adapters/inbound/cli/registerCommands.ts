@@ -68,7 +68,8 @@ export function registerCommands(program: Command, deps: Dependencies) {
   program
     .command('report')
     .description('Affiche un rapport des heures travaillées')
-    .option('-p, --period <period>', "Période (today, yesterday, week, month, last-month)", 'month')
+    .option('-p, --period <period>', "Période (today, yesterday, week, last-week, month, last-month)", 'month')
+    .option('-c, --count <count>', "Nombre de périodes à inclure (ex: 2)", '1')
     .option('-d, --detail', 'Affiche le détail par jour')
     .option('-t, --target-day-hours <hours>', "Extrapole les heures de chaque jour pour atteindre un total de <hours> heures (ex: 8)")
     .option('--decimal', "Affiche les durées en heures décimales (ex: 1.5h)")
